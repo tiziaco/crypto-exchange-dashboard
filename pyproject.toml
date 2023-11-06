@@ -1,17 +1,18 @@
 [tool.poetry]
 name = "crypto-exchange-dashboard"
 version = "0.1.0"
-description = "Aggregate the asset info from different crypto exchanges"
+description = "Crtptho exchages dashboard"
 authors = ["tiziaco <tiziano.iaco@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = "3.11.1"
+ccxt = "^4.1.40"
 pandas = "^2.1.2"
 numpy = "^1.26.1"
-plotly = "^5.18.0"
-flask = "^3.0.0"
+flask-sqlalchemy = "^3.1.1"
 python-dotenv = "^1.0.0"
+flask-migrate = "^4.0.5"
 
 
 [build-system]
