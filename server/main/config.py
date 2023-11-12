@@ -10,8 +10,8 @@ class Config:
 	"""Flask configuration variables."""
 
 	# General Config
-	APP_NAME = os.environ.get("APP_NAME")
-	DEBUG = os.environ.get("FLASK_DEBUG")
+	APP_NAME = "Crypto Exchange Dashboard"
+	DEBUG = True
 	SECRET_KEYS = keys_data.get('SECRET_KEYS', {})
 
 class DevelopmentConfig(Config):

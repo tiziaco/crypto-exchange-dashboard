@@ -2,14 +2,20 @@ import os
 import unittest
 from flask import Flask
 from flask.cli import FlaskGroup
-from flask_migrate import Migrate
+#from flask_migrate import Migrate
 
 from main import create_app, db
 
 app = create_app(os.getenv('BOILERPLATE_ENV') or 'dev')
 with app.app_context():
     from main.controllers import routes
-migrate = Migrate(app, db)
+    # TODO: import dash app
+    from main.views.dash import demo
+
+    # TODO: initialize dash app
+    app = demo.init_dash(app)
+
+#migrate = Migrate(app, db)
 
 # Create a FlaskGroup instead of a Manager
 cli = FlaskGroup(app)

@@ -1,4 +1,5 @@
 from pathlib import Path
+from flask import render_template
 import re
 
 from flask import current_app as app
@@ -6,4 +7,8 @@ from flask import current_app as app
 
 @app.route("/")
 def index():
-	return "<h1> Server connected </h1>"
+	return render_template(
+			"index.html",
+			# content=Markup(html),
+			# styles=Markup(styles),
+		)
