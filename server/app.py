@@ -2,7 +2,8 @@ import os
 import unittest
 from flask import Flask
 from flask.cli import FlaskGroup
-#from flask_migrate import Migrate
+from flask_migrate import Migrate
+# from flask_script import Manager
 
 from main import create_app, db
 
@@ -12,13 +13,13 @@ with app.app_context():
     # TODO: import dash app
     from main.views.dash import demo
 
+    # db.create_all()
     # TODO: initialize dash app
     app = demo.init_dash(app)
 
-#migrate = Migrate(app, db)
-
 # Create a FlaskGroup instead of a Manager
 cli = FlaskGroup(app)
+migrate = Migrate(app, db)
 
 @cli.command()
 def run():
