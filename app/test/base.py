@@ -4,7 +4,10 @@ from manage import app
 
 
 class BaseTestCase(TestCase):
-    """ Base Tests """
+    """ 
+    Base test class for other thest cases. Methodes used
+    by the unittest module.
+    """
 
     def create_app(self):
         app.config.from_object('app.main.config.TestingConfig')
