@@ -1,10 +1,9 @@
-from pathlib import Path
 from flask import render_template, jsonify
+from flask import Blueprint
 
-from flask import current_app as app
+views_blueprint = Blueprint('views', __name__)
 
-
-@app.route("/")
+@views_blueprint.route("/")
 def index():
 	return render_template(
 			"index.html",
@@ -12,10 +11,9 @@ def index():
 			# styles=Markup(styles),
 		)
 
-@app.route('/api/test', methods=['GET'])
+@views_blueprint.route('/api/test', methods=['GET'])
 def test_api():
     # Replace this with your actual data retrieval logic
     data = {'key': 'value', 'foo': 'bar'}
-    
-    # Return the data as JSON
+
     return jsonify(data)

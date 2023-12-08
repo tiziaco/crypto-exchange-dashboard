@@ -5,19 +5,12 @@ from flask_migrate import Migrate
 
 from app.main import create_app, db
 
-app = create_app(os.getenv('BOILERPLATE_ENV') or 'dev')
+app = create_app(os.getenv('BOILERPLATE_ENV') or 'test')
 cli = FlaskGroup(app)
 migrate = Migrate(app, db)
 
 with app.app_context():
-    from app.main.controllers import routes
-    from app.main.controllers import user_routes
-    # TODO: import dash app
-    # from app.main.views.dash import demo
-
-    # db.create_all()
-    # TODO: initialize dash app
-    # app = demo.init_dash(app)
+    db.create_all()
 
 @cli.command()
 def run():
