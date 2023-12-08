@@ -1,4 +1,5 @@
 from .. import db
+from app.main.models.models import Portfolio
 
 class User(db.Model):
     __tablename__ = "user"
@@ -11,9 +12,9 @@ class User(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False)
     portfolios = db.relationship('Portfolio', backref='user', lazy=True)
 
-    @property
-    def password(self):
-        raise AttributeError('password: write-only field')
+    # @property
+    # def password(self):
+    #     raise AttributeError('password: write-only field')
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}')"
