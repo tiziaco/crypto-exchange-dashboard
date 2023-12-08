@@ -3,6 +3,7 @@ import json
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 # Load configuration from JSON file
+print(basedir)
 with open('keys.json', 'r') as keys_file:
     keys_data = json.load(keys_file)
 

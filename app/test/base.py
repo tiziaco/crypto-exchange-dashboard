@@ -1,13 +1,13 @@
 from flask_testing import TestCase
-from server.main import db
-from app import app
+from app.main import db
+from manage import app
 
 
 class BaseTestCase(TestCase):
     """ Base Tests """
 
     def create_app(self):
-        app.config.from_object('server.main.config.TestingConfig')
+        app.config.from_object('app.main.config.TestingConfig')
         return app
 
     def setUp(self):
