@@ -1,5 +1,5 @@
 from .. import db
-from app.main.models.models import Portfolio
+from app.main.models.portfolio import Portfolio
 
 class User(db.Model):
     __tablename__ = "user"
