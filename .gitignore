@@ -6,7 +6,10 @@ __pycache__/
 *.json
 *.txt
 *.db
+
+# Folders
 migrations/
+portfolio_OLD/
 
 # C extensions
 *.so
