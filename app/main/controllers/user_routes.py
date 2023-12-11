@@ -1,7 +1,7 @@
 from flask import request, Blueprint
-from flask import current_app as app
 
-from ..services.user_service import save_new_user, get_all_users, get_a_user, remove_user
+from ..services.user_service import save_new_user, get_all_users, remove_user, \
+get_user_portfolios
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -20,3 +20,8 @@ def list_user():
 def delete_user(user_id):
     """List of registered user"""
     return remove_user(user_id)
+
+@user_blueprint.route('/<string:user_public_id>/get_portfolios', methods=['GET'])
+def get_portfolios(user_public_id):
+    """List of registered user"""
+    return get_user_portfolios(user_public_id)
