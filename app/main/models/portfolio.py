@@ -10,6 +10,14 @@ class Portfolio(db.Model):
     transactions = db.relationship('Transaction', backref='portfolio', lazy=True)
     # positions = db.relationship('Position', backref='portfolio', lazy=True)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'exchange': self.exchange,
+            'transactions': len(self.transactions)
+        }
+
     def __repr__(self):
         return f"Portfolio('{self.name}')"
 
@@ -24,14 +32,30 @@ class Position(db.Model):
 
 class Transaction(db.Model):
     __tablename__ = "transaction"
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.DateTime, nullable=False)
     pair = db.Column(db.String(10), nullable=False)
-    side = db.Column(db.String(10), nullable=False)  # 'buy' or 'sell'
+    side = db.Column(db.String(10), nullable=False)
     price = db.Column(db.Integer, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     amount = db.Column(db.Integer, nullable=False)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
+
+    def __init__(self, date=None, *args, **kwargs):
+        if date is None:
+            date = datetime.utcnow()
+        super().__init__(date=date, *args, **kwargs)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date': self.date,
+            'pair': self.pair,
+            'side': self.side,
+            'price': self.price,
+            'quantity': self.quantity,
+            'amount': self.amount
+        }
 
     def __repr__(self):
         return f"Transaction('{self.pair}', {self.quantity}, '{self.side}', {self.date})"
