@@ -1,9 +1,9 @@
 import unittest
-from datetime import datetime
 from flask import json
 from app.test.base import BaseTestCase
 from app.main.models.user import User
 from app.main import db
+from util import create_test_user, create_test_portfolio
 
 class UserRoutesTest(BaseTestCase):
 
@@ -33,14 +33,7 @@ class UserRoutesTest(BaseTestCase):
 
     def test_delete_user(self):
         # Create a user for testing deletion
-        new_user = User(
-            username='delete_me',
-            email='delete@example.com',
-            password='testpassword',
-            registered_on=datetime.utcnow()
-        )
-        db.session.add(new_user)
-        db.session.commit()
+        new_user = create_test_user()
 
         # Test deleting a user
         user_id = new_user.id
@@ -58,6 +51,13 @@ class UserRoutesTest(BaseTestCase):
         print(response)
         self.assert404(response)
         self.assertIn('User ID 999 not found.', response.json['message'])
+
+    def test_get_user_portfolios(self):
+        user = create_test_user()
+        portfolio = create_test_portfolio(user.id)
+
+        response = self.client.get(f'/{user.public_id}/get_portfolios')
+        self.assert200(response)
 
 if __name__ == '__main__':
     unittest.main()
