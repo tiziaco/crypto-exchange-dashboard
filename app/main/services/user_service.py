@@ -1,6 +1,4 @@
-import uuid
-import datetime
-
+from flask import jsonify
 from app.main import db
 from app.main.models.user import User
 
@@ -9,11 +7,9 @@ def save_new_user(data):
     user = User.query.filter_by(email=data['email']).first()
     if not user:
         new_user = User(
-            public_id=str(uuid.uuid4()),
             email=data['email'],
             username=data['username'],
             password=data['password'],
-            registered_on=datetime.datetime.utcnow()
         )
         save_changes(new_user)
         response_object = {
@@ -31,7 +27,13 @@ def save_new_user(data):
 def get_all_users():
     return User.query.all()
 
-def get_a_user(public_id):
+def get_user_id(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
+    if user:
+        return user.id
+    return None
+
+def get_user(public_id):
     user = User.query.filter_by(public_id=public_id).first()
     if user:
         return user
@@ -59,6 +61,16 @@ def remove_user(user_id):
             'message': f'User ID {user_id} not found.',
         }
         return response_object, 404
+
+def get_user_portfolios(user_public_id):
+    user = get_user(user_public_id)
+    if user:
+        portfolios = user.portfolios
+        serialized_portfolios = [portfolio.to_dict() for portfolio in portfolios]
+        return jsonify(serialized_portfolios), 200
+    else:
+        # Handle the case where the user with the given ID is not found
+        return None
 
 def save_changes(data):
     db.session.add(data)
