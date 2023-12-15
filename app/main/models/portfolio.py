@@ -32,6 +32,9 @@ class Transaction(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     amount = db.Column(db.Integer, nullable=False)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
+    #portfolio = db.relationship('Portfolio', backref='transactions', lazy=True)
+    position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
+    #position = db.relationship('Position', backref='transactions', lazy=True)
 
     def __init__(self, date=None, *args, **kwargs):
         if date is None:
@@ -64,15 +67,16 @@ class Position(db.Model):
     avg_bought = db.Column(db.Integer, nullable=False)
     avg_sold = db.Column(db.Integer, nullable=False)
     buy_commission = db.Column(db.Integer, nullable=False)
-    buy_quantity = db.Column(db.Integer, nullable=False)
+    sell_commission = db.Column(db.Integer, nullable=False)
     is_open = db.Column(db.Boolean, default = True, nullable=False)
-    sell_commission = db.relationship('Transaction', backref='portfolio', lazy=True)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
+    #portfolio = db.relationship('Portfolio', backref='positions', lazy=True)
+    transactions = db.relationship('Transaction', backref='position', lazy=True)
 
     current_price = 0;
 
     def __repr__(self):
-        return f"Position('{self.symbol}', {self.quantity})"
+        return f"Position('{self.symbol}')"
     
     @property
     def market_value(self):

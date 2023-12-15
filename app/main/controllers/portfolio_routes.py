@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from app.main.services.portfolio_service import add_portfolio, remove_portfolio,\
-add_transaction_to_portfolio, remove_transaction, get_portfolio_transactions
-#from flask import current_app as app
+    add_transaction_to_portfolio, remove_transaction, get_portfolio_transactions, create_transaction
+from app.main.services.position_service import process_transaction
 
 portfolio_blueprint = Blueprint('portfolio', __name__)
 
@@ -18,7 +18,8 @@ def delete_portfolio(user_public_id, portfolio_name):
 @portfolio_blueprint.route('/add_transaction/<int:portfolio_id>', methods=['POST'])
 def add_transaction(portfolio_id):
     transaction_data = request.json
-    return add_transaction_to_portfolio(portfolio_id, transaction_data)
+    transaction = create_transaction(portfolio_id, transaction_data)
+    return process_transaction(transaction)
 
 @portfolio_blueprint.route('/delete_transaction/<int:portfolio_id>/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction(portfolio_id, transaction_id):

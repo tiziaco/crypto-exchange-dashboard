@@ -37,6 +37,18 @@ def remove_portfolio(user_public_id, portfolio_name):
         }
         return response_object, 404
 
+def create_transaction(portfolio_id, transaction_data):
+    portfolio = Portfolio.query.get(portfolio_id)
+    transaction = Transaction(
+            pair=transaction_data.get('pair'),
+            side=transaction_data.get('side'),
+            price=transaction_data.get('price'),
+            quantity=transaction_data.get('quantity'),
+            amount=transaction_data.get('amount'),
+            portfolio_id=portfolio.id
+        )
+    return transaction
+
 def add_transaction_to_portfolio(portfolio_id, transaction_data):
     try:
         portfolio = Portfolio.query.get(portfolio_id)
