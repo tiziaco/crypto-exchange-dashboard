@@ -3,9 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 .DS_Store
+
+# Files
 *.json
 *.txt
 *.db
+count_lines.py
 
 # Folders
 migrations/
