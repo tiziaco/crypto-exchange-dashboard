@@ -62,7 +62,7 @@ class PortfolioRoutesTest(BaseTestCase):
             content_type='application/json'
         )
         self.assert200(response)
-        self.assertIn('Transaction successfully added.', response.json['message'])
+        self.assertIn('Transaction processed. Long position added', response.json['message'])
     
     def test_remove_transaction(self):
         # Create a portfolio and a transaction for testing removal

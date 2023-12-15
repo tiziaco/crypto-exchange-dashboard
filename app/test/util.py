@@ -1,5 +1,6 @@
+from datetime import datetime
 from app.main.models.user import User
-from app.main.models.portfolio import Portfolio, Transaction
+from app.main.models.portfolio import Portfolio, Transaction, Position
 from app.main import db
 
 def create_test_user():
@@ -20,15 +21,30 @@ def create_test_portfolio(user_id):
     save_changes(portfolio)
     return portfolio
 
+def create_test_position(transaction, side):
+    position = Position(
+        entry_date=datetime.utcnow(),
+        portfolio_id = transaction.portfolio_id,
+        symbol=transaction.pair,
+        side = side,
+        buy_quantity=max(transaction.quantity, 0) if side == 'long' else 0,
+        sell_quantity=-min(transaction.quantity, 0) if side == 'short' else 0,
+        avg_bought=transaction.price if side == 'long' else 0,
+        avg_sold=transaction.price if side == 'short' else 0,
+        buy_commission=0,
+        sell_commission=0,
+        is_open=True,
+        current_price=0
+    )
+    return position
+
 def create_test_portfolio_with_transaction():
     # Create a test user
     user = create_test_user()
     # Create a test portfolio
     portfolio = create_test_portfolio(user.id)
-
     # Create a test transaction associated with the portfolio
     transaction = Transaction(
-        #date=datetime.utcnow(),
         pair='BTC/USD',
         side='buy',
         price=50000,
@@ -36,7 +52,15 @@ def create_test_portfolio_with_transaction():
         amount=50000,
         portfolio_id=portfolio.id
     )
+    # Create a test position
+    position = create_test_position(transaction, 'long')
+    save_changes(position)
+    transaction.position_id = position.id
     save_changes(transaction)
+    # print("***** TEST ******")
+    # print(f"Portfolio ID: {portfolio.id}")
+    # print(f"Transaction ID: {transaction.id}")
+    # print(f"Position ID: {position.id}")
     return portfolio, transaction
 
 def create_test_portfolio_with_transactions():
@@ -46,7 +70,7 @@ def create_test_portfolio_with_transactions():
     portfolio = create_test_portfolio(user.id)
 
     # Create a test transaction associated with the portfolio
-    transaction1 = Transaction(
+    transaction_buy = Transaction(
         #date=datetime.utcnow(),
         pair='BTC/USD',
         side='buy',
@@ -55,7 +79,7 @@ def create_test_portfolio_with_transactions():
         amount=50000,
         portfolio_id=portfolio.id
     )
-    transaction2 = Transaction(
+    transaction_sell = Transaction(
         #date=datetime.utcnow(),
         pair='BTC/USD',
         side='sell',
@@ -64,9 +88,14 @@ def create_test_portfolio_with_transactions():
         amount=60000,
         portfolio_id=portfolio.id
     )
-    save_changes(transaction1)
-    save_changes(transaction2)
-    transactions = [transaction1, transaction2]
+    # Create a test position
+    position = create_test_position(transaction_buy, 'long')
+    save_changes(position)
+    transaction_buy.position_id = position.id
+    save_changes(transaction_buy)
+    transaction_sell.position_id = position.id
+    save_changes(transaction_sell)
+    transactions = [transaction_buy, transaction_sell]
     return portfolio, transactions
 
 def save_changes(data):
