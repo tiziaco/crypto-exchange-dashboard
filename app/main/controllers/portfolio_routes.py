@@ -1,10 +1,12 @@
 from flask import Blueprint, request
 from app.main.services.portfolio_service import add_portfolio, remove_portfolio,\
-    add_transaction_to_portfolio, remove_transaction, get_portfolio_transactions, create_transaction
+    create_transaction, remove_transaction, get_portfolio_transactions,\
+    get_portfolio_open_positions, get_portfolio_closed_positions
 from app.main.services.position_service import process_transaction
 
 portfolio_blueprint = Blueprint('portfolio', __name__)
 
+## Portfolio routes
 @portfolio_blueprint.route('/<string:user_public_id>/portfolio/add', methods=['POST'])
 def create_portfolio(user_public_id):
 	portfolio_data = request.json
@@ -15,6 +17,7 @@ def delete_portfolio(user_public_id, portfolio_name):
     """List of registered user"""
     return remove_portfolio(user_public_id, portfolio_name)
 
+## Transaction routes
 @portfolio_blueprint.route('/add_transaction/<int:portfolio_id>', methods=['POST'])
 def add_transaction(portfolio_id):
     transaction_data = request.json
@@ -28,3 +31,12 @@ def delete_transaction(portfolio_id, transaction_id):
 @portfolio_blueprint.route('/get_transactions/<int:portfolio_id>', methods=['GET'])
 def get_transactions(portfolio_id):
     return get_portfolio_transactions(portfolio_id)
+
+## Position routes
+@portfolio_blueprint.route('/get_open_positions/<int:portfolio_id>', methods=['GET'])
+def get_open_positions(portfolio_id):
+  return get_portfolio_open_positions(portfolio_id)
+
+@portfolio_blueprint.route('/get_closed_positions/<int:portfolio_id>', methods=['GET'])
+def get_closed_positions(portfolio_id):
+  return get_portfolio_closed_positions(portfolio_id)

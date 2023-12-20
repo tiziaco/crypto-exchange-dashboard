@@ -15,7 +15,8 @@ class Portfolio(db.Model):
             'id': self.id,
             'name': self.name,
             'exchange': self.exchange,
-            'transactions': len(self.transactions)
+            'transactions': len(self.transactions),
+            'positions': len(self.positions)
         }
 
     def __repr__(self):
@@ -32,14 +33,15 @@ class Transaction(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     amount = db.Column(db.Integer, nullable=False)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
-    #portfolio = db.relationship('Portfolio', backref='transactions', lazy=True)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
-    #position = db.relationship('Position', backref='transactions', lazy=True)
 
     def __init__(self, date=None, *args, **kwargs):
         if date is None:
             date = datetime.utcnow()
         super().__init__(date=date, *args, **kwargs)
+    
+    def __repr__(self):
+        return f"Transaction('{self.pair}', {self.quantity}, '{self.side}', {self.date})"
 
     def to_dict(self):
         return {
@@ -51,10 +53,6 @@ class Transaction(db.Model):
             'quantity': self.quantity,
             'amount': self.amount
         }
-
-    def __repr__(self):
-        return f"Transaction('{self.pair}', {self.quantity}, '{self.side}', {self.date})"
-
 
 class Position(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -70,13 +68,27 @@ class Position(db.Model):
     sell_commission = db.Column(db.Integer, nullable=False)
     is_open = db.Column(db.Boolean, default = True, nullable=False)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
-    #portfolio = db.relationship('Portfolio', backref='positions', lazy=True)
     transactions = db.relationship('Transaction', backref='position', lazy=True)
 
     current_price = 0;
 
     def __repr__(self):
         return f"Position('{self.symbol}')"
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'is_open': self.is_open,
+            'entry_date': self.entry_date,
+            'exit_date': self.exit_date,
+            'pair': self.symbol,
+            'side': self.side,
+            'avg_price': self.avg_price,
+            'net_quantity': self.net_quantity,
+            'net_total': self.net_total,
+            'realised_pnl': self.realised_pnl,
+            'unrealised_pnl': self.unrealised_pnl
+        }
     
     @property
     def market_value(self):
@@ -93,9 +105,9 @@ class Position(db.Model):
         """
         if self.net_quantity == 0:
             return 0.0
-        elif self.action =='BOT':
+        elif self.side == 'long':
             return (self.avg_bought * self.buy_quantity + self.buy_commission) / self.buy_quantity
-        else: # action == "SLD"
+        else: # side == "short"
             return (self.avg_sold * self.sell_quantity - self.sell_commission) / self.sell_quantity
 
     @property
@@ -148,7 +160,7 @@ class Position(db.Model):
         Calculates the profit & loss (P&L) that has been 'realised' via
         two opposing asset transactions in the Position to date.
         """
-        if self.action == 'BOT':
+        if self.side == 'long':
             if self.sell_quantity == 0:
                 return 0.0
             else:
@@ -157,7 +169,7 @@ class Position(db.Model):
                     ((self.sell_quantity / self.buy_quantity) * self.buy_commission) -
                     self.sell_commission
                 )
-        elif self.action == 'SLD':
+        elif self.side == 'short':
             if self.buy_quantity == 0:
                 return 0.0
             else:

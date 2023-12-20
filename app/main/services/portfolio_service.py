@@ -1,7 +1,7 @@
 from flask import jsonify
 from app.main import db
 from app.main.models.user import User
-from app.main.models.portfolio import Portfolio, Transaction
+from app.main.models.portfolio import Portfolio, Transaction, Position
 from app.main.services.user_service import get_user_id
 
 def add_portfolio(user_public_id, portfolio_data):
@@ -91,10 +91,33 @@ def get_portfolio_transactions(portfolio_id):
     try:
         transactions = Transaction.query.filter_by(portfolio_id=portfolio_id).all()
 
-        # Optionally, you can serialize the transactions or return them as is
+        # Optionally, serialize the transactions or return them as is
         serialized_transactions = [transaction.to_dict() for transaction in transactions]
 
         return jsonify(serialized_transactions), 200
+    except Exception as e:
+        return {'status': 'fail', 'message': str(e)}, 500
+
+def get_portfolio_open_positions(portfolio_id):
+    try:
+        open_positions = Position.query.filter_by(portfolio_id=portfolio_id,
+                                                is_open = True).all()
+        # Optionally, serialize the transactions or return them as is
+        serialized_positions = [position.to_dict() for position in open_positions]
+
+        return jsonify(serialized_positions), 200
+    except Exception as e:
+        print(str(e))
+        return {'status': 'fail', 'message': str(e)}, 500
+
+def get_portfolio_closed_positions(portfolio_id):
+    try:
+        closed_positions = Position.query.filter_by(portfolio_id=portfolio_id,
+                                                is_open = False).all()
+        # Optionally, serialize the transactions or return them as is
+        serialized_positions = [position.to_dict() for position in closed_positions]
+
+        return jsonify(serialized_positions), 200
     except Exception as e:
         return {'status': 'fail', 'message': str(e)}, 500
 
