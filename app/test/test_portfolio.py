@@ -61,6 +61,9 @@ class PortfolioRoutesTest(BaseTestCase):
             }),
             content_type='application/json'
         )
+        # Verify that the position is in the database
+        positions = Portfolio.query.get(portfolio.id).positions
+        self.assertEqual(len(positions), 1)
         self.assert200(response)
         self.assertIn('Transaction processed. Long position added', response.json['message'])
     
