@@ -43,7 +43,7 @@ class PortfolioRoutesTest(BaseTestCase):
         deleted_portfolio = Portfolio.query.filter_by(id=portfolio.id).first()
         self.assertIsNone(deleted_portfolio)
     
-    def test_add_transaction(self):
+    def test_buy_transaction(self):
         # Create a portfolio to associate the transaction with
         user = create_test_user()
         portfolio = create_test_portfolio(user.id)
@@ -57,15 +57,67 @@ class PortfolioRoutesTest(BaseTestCase):
                 'side': 'buy',
                 'price': 50000,
                 'quantity': 1,
-                'amount': 50000
             }),
             content_type='application/json'
         )
-        # Verify that the position is in the database
+        # Get the open position from the database
         positions = Portfolio.query.get(portfolio.id).positions
+        position = positions[0]
+        # Assume a current price for the position = 60000
+        position.current_price = 60000
+
         self.assertEqual(len(positions), 1)
         self.assert200(response)
         self.assertIn('Transaction processed. Long position added', response.json['message'])
+
+        self.assertEqual(position.side, "long")
+        self.assertEqual(position.avg_bought, 50000)
+        self.assertEqual(position.avg_sold, 0)
+        self.assertEqual(position.avg_price, 50000)
+        self.assertEqual(position.current_price, 60000)
+        self.assertEqual(position.net_quantity, 1)
+        self.assertEqual(position.net_total, 10000)
+        self.assertEqual(position.realised_pnl, 0)
+        self.assertEqual(position.unrealised_pnl, 10000)
+    
+    def test_sell_transaction(self):
+        # Create a portfolio to associate the transaction with
+        user = create_test_user()
+        portfolio = create_test_portfolio(user.id)
+
+        # Make a request to add a transaction
+        response = self.client.post(
+            f'/add_transaction/{portfolio.id}',
+            data=json.dumps({
+                'date': '2023-01-01T12:00:00Z',
+                'pair': 'BTC/USD',
+                'side': 'sell',
+                'price': 60000,
+                'quantity': 1,
+            }),
+            content_type='application/json'
+        )
+        # Get the open position from the database
+        positions = Portfolio.query.get(portfolio.id).positions
+        position = positions[0]
+        # Assume a current price for the position = 60000
+        position.current_price = 50000
+
+        self.assertEqual(len(positions), 1)
+        self.assert200(response)
+        self.assertIn('Transaction processed. Short position added', response.json['message'])
+
+        self.assertEqual(position.side, "short")
+        self.assertEqual(position.avg_bought, 0)
+        self.assertEqual(position.avg_sold, 60000)
+        self.assertEqual(position.avg_price, 60000)
+        self.assertEqual(position.buy_quantity, 0)
+        self.assertEqual(position.sell_quantity, 1)
+        self.assertEqual(position.current_price, 50000)
+        self.assertEqual(position.net_quantity, 1)
+        self.assertEqual(position.net_total, 10000)
+        self.assertEqual(position.realised_pnl, 0)
+        self.assertEqual(position.unrealised_pnl, 10000)
     
     def test_remove_transaction(self):
         # Create a portfolio and a transaction for testing removal

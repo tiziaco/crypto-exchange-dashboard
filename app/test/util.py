@@ -27,8 +27,8 @@ def create_test_position(transaction, side):
         portfolio_id = transaction.portfolio_id,
         symbol=transaction.pair,
         side = side,
-        buy_quantity=max(transaction.quantity, 0) if side == 'long' else 0,
-        sell_quantity=-min(transaction.quantity, 0) if side == 'short' else 0,
+        buy_quantity=transaction.quantity if side == 'long' else 0,
+        sell_quantity=transaction.quantity if side == 'short' else 0,
         avg_bought=transaction.price if side == 'long' else 0,
         avg_sold=transaction.price if side == 'short' else 0,
         buy_commission=0,
@@ -38,14 +38,21 @@ def create_test_position(transaction, side):
     )
     return position
 
-def create_test_transaction(pair, side, price, quantity, amount, portfolio_id):
+def create_test_transaction(pair, side, price, quantity, portfolio_id):
     return Transaction(
         pair=pair,
         side=side,
         price=price,
         quantity=quantity,
-        amount=amount,
         portfolio_id=portfolio_id)
+
+def create_empty_portfolio():
+    # Create a test user
+    user = create_test_user()
+    # Create a test portfolio
+    portfolio = create_test_portfolio(user.id)
+
+    return portfolio
 
 def create_test_portfolio_with_transaction():
     # Create a test user
@@ -58,7 +65,6 @@ def create_test_portfolio_with_transaction():
         side='buy',
         price=50000,
         quantity=1,
-        amount=50000,
         portfolio_id=portfolio.id
     )
     # Create a test position
@@ -84,15 +90,13 @@ def create_test_portfolio_with_transactions():
         side='buy',
         price=50000,
         quantity=1,
-        amount=50000,
         portfolio_id=portfolio.id
     )
     transaction_sell = Transaction(
         pair='BTC/USD',
         side='sell',
         price=60000,
-        quantity=-1,
-        amount=60000,
+        quantity=1,
         portfolio_id=portfolio.id
     )
     # Create a test position
