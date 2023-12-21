@@ -1,5 +1,6 @@
 from .. import db
 from datetime import datetime
+from sqlalchemy import Numeric
 
 class Portfolio(db.Model):
     __tablename__ = "portfolio"
@@ -29,9 +30,8 @@ class Transaction(db.Model):
     date = db.Column(db.DateTime, nullable=False)
     pair = db.Column(db.String(10), nullable=False)
     side = db.Column(db.String(10), nullable=False)
-    price = db.Column(db.Integer, nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    amount = db.Column(db.Integer, nullable=False)
+    price = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
+    quantity = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
 
@@ -53,6 +53,10 @@ class Transaction(db.Model):
             'quantity': self.quantity,
             'amount': self.amount
         }
+    
+    @property
+    def amount(self):
+        return self.quantity * self.price
 
 class Position(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -60,17 +64,16 @@ class Position(db.Model):
     exit_date = db.Column(db.DateTime, nullable=True)
     symbol = db.Column(db.String(10), nullable=False)
     side = db.Column(db.String(10), nullable=False)
-    buy_quantity = db.Column(db.Integer, nullable=False)
-    sell_quantity = db.Column(db.Integer, nullable=False)
-    avg_bought = db.Column(db.Integer, nullable=False)
-    avg_sold = db.Column(db.Integer, nullable=False)
-    buy_commission = db.Column(db.Integer, nullable=False)
-    sell_commission = db.Column(db.Integer, nullable=False)
+    current_price = db.Column(Numeric(precision=18, scale=8, asdecimal=False), nullable=False)
+    buy_quantity = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
+    sell_quantity = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
+    avg_bought = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
+    avg_sold = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
+    buy_commission = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
+    sell_commission = db.Column(Numeric(precision=18, scale=8, asdecimal= False), nullable=False)
     is_open = db.Column(db.Boolean, default = True, nullable=False)
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
     transactions = db.relationship('Transaction', backref='position', lazy=True)
-
-    current_price = 0;
 
     def __repr__(self):
         return f"Position('{self.symbol}')"
@@ -79,6 +82,7 @@ class Position(db.Model):
         return {
             'id': self.id,
             'is_open': self.is_open,
+            'current_price': self.current_price,
             'entry_date': self.entry_date,
             'exit_date': self.exit_date,
             'pair': self.symbol,
@@ -87,7 +91,14 @@ class Position(db.Model):
             'net_quantity': self.net_quantity,
             'net_total': self.net_total,
             'realised_pnl': self.realised_pnl,
-            'unrealised_pnl': self.unrealised_pnl
+            'unrealised_pnl': self.unrealised_pnl,
+            'avg_bought': self.avg_bought,
+            'avg_sold': self.avg_sold,
+            'buy_quantity': self.buy_quantity,
+            'sell_quantity': self.sell_quantity,
+            'total_bought': self.total_bought,
+            'total_sold': self.total_sold,
+            'market_value': self.market_value
         }
     
     @property
@@ -103,6 +114,7 @@ class Position(db.Model):
         """
         The average price paid for all assets on the long or short side.
         """
+        # TODO: vedere se devo ritornare 0 quando la posizione è stata chiusa
         if self.net_quantity == 0:
             return 0.0
         elif self.side == 'long':
@@ -137,7 +149,13 @@ class Position(db.Model):
         Calculates the net total average cost of assets
         bought and sold.
         """
-        return self.total_sold - self.total_bought
+        if self.is_open == False: # The position is closed
+            return self.total_sold - self.total_bought
+        else:
+            if self.side == 'long':
+                return self.market_value - self.total_bought
+            else:
+                return self.total_sold - self.market_value
 
     @property
     def commission(self):
@@ -188,7 +206,10 @@ class Position(db.Model):
         in the remaining non-zero quantity of assets, due to the current
         market price.
         """
-        return (self.current_price - self.avg_price) * self.net_quantity
+        if self.side == 'long':
+            return (self.current_price - self.avg_price) * self.net_quantity
+        elif self.side == 'short':
+            return (self.avg_price - self.current_price) * self.net_quantity
 
     @property
     def total_pnl(self):
