@@ -44,7 +44,6 @@ def create_transaction(portfolio_id, transaction_data):
             side=transaction_data.get('side'),
             price=transaction_data.get('price'),
             quantity=transaction_data.get('quantity'),
-            amount=transaction_data.get('amount'),
             portfolio_id=portfolio.id
         )
     return transaction
@@ -61,7 +60,6 @@ def add_transaction_to_portfolio(portfolio_id, transaction_data):
             side=transaction_data.get('side'),
             price=transaction_data.get('price'),
             quantity=transaction_data.get('quantity'),
-            amount=transaction_data.get('amount'),
             portfolio_id=portfolio.id
         )
         save_changes(new_transaction)
@@ -119,6 +117,7 @@ def get_portfolio_closed_positions(portfolio_id):
 
         return jsonify(serialized_positions), 200
     except Exception as e:
+        print(str(e))
         return {'status': 'fail', 'message': str(e)}, 500
 
 def save_changes(data):

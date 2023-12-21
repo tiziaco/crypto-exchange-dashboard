@@ -11,6 +11,7 @@ def process_transaction(transaction):
         quantity = transaction.quantity
         price = transaction.price
         side = transaction.side
+        #TODO: add commission to transaction
 
         # Retrieve existing position for the trading pair
         existing_position = Position.query.filter_by(symbol=trade_pair, 
@@ -24,7 +25,7 @@ def process_transaction(transaction):
                 transaction.position_id = existing_position.id
                 # Check if position should be closed
                 if existing_position.net_quantity == 0:
-                    close_position(existing_position)
+                    close_position(existing_position, price)
                     response_object = {'status': 'success',
                                    'message': 'Transaction processed. Position closed'}
                 else:
@@ -43,7 +44,7 @@ def process_transaction(transaction):
                 transaction.position_id = existing_position.id
                 # Check if position should be closed
                 if existing_position.net_quantity == 0:
-                    close_position(existing_position)
+                    close_position(existing_position, price)
                     response_object = {'status': 'success',
                                    'message': 'Transaction processed. Position closed'}
                 else:
@@ -51,7 +52,7 @@ def process_transaction(transaction):
                                    'message': 'Transaction processed. Position updated'}
             else:
                 # Create a new short position for the trading pair
-                new_position = create_position(trade_pair, portfolio_id, -quantity, price, side='short')
+                new_position = create_position(trade_pair, portfolio_id, quantity, price, side='short')
                 transaction.position_id = new_position.id
                 response_object = {'status': 'success',
                                    'message': 'Transaction processed. Short position added'}
@@ -72,14 +73,14 @@ def create_position(trade_pair, portfolio_id, quantity, price, side):
         portfolio_id = portfolio_id,
         symbol=trade_pair,
         side = side,
-        buy_quantity=max(quantity, 0) if side == 'long' else 0,
-        sell_quantity=-min(quantity, 0) if side == 'short' else 0,
+        current_price = price,
+        buy_quantity=quantity if side == 'long' else 0,
+        sell_quantity=quantity if side == 'short' else 0,
         avg_bought=price if side == 'long' else 0,
         avg_sold=price if side == 'short' else 0,
         buy_commission=0,
         sell_commission=0,
         is_open=True,
-        current_price=0
     )
     db.session.add(new_position)
     db.session.commit()
@@ -88,17 +89,20 @@ def create_position(trade_pair, portfolio_id, quantity, price, side):
 def update_position(position, quantity, price):
     # Update position details based on the transaction
     if quantity > 0:  # Buy transaction
+        position.avg_bought = ((position.avg_bought * position.buy_quantity) + (quantity * price)) / (position.buy_quantity + quantity)
         position.buy_quantity += quantity
-        position.avg_bought = (position.avg_bought * position.buy_quantity + price) / position.buy_quantity
+        #TODO: position.buy_commission += commission
     elif quantity < 0:  # Sell transaction
-        position.sell_quantity -= quantity
-        position.avg_sold = (position.avg_sold * position.sell_quantity - price) / position.sell_quantity
+        position.avg_sold = ((position.avg_sold * position.sell_quantity) + (-quantity * price)) / (position.sell_quantity + (-quantity))
+        position.sell_quantity += -1 * quantity
+        #TODO: position.sell_commission += commission
 
     position.current_price = price  # Update current price
     db.session.commit()
 
-def close_position(position):
+def close_position(position, price):
     # Close the position by updating is_open to False
     position.is_open = False
     position.exit_date = datetime.utcnow()
+    position.current_price = price  
     db.session.commit()
